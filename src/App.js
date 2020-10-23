@@ -1,26 +1,79 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import { ordinal_suffix } from "./helpers";
+import { reducer, initialState } from './reducer'
+import { Results } from "./Results";
 
 function App() {
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
+  const runWorker = (num, id) => {
+    dispatch({ type: "SET_ERROR", err: "" });
+    const worker = new window.Worker('./fib-worker.js')
+    worker.postMessage({ num });
+    worker.onerror = (err) => err;
+    worker.onmessage = (e) => {
+      const { time, fibNum } = e.data;
+      dispatch({
+        type: "UPDATE_FIBO",
+        id,
+        time,
+        fibNum,
+      });
+      worker.terminate();
+    };
+  };
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
+    <div>
+      <div className="heading-container">
+        <h1>Computing the nth Fibonnaci number</h1>
+      </div>
+      <div className="body-container">
+        <p id="error" className="error">
+          {state.err}
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+        <div className="input-div">
+          <input
+            type="number"
+            value={state.num}
+            className="number-input"
+            placeholder="Enter a number"
+            onChange={(e) =>
+              dispatch({
+                type: "SET_NUMBER",
+                num: window.Number(e.target.value),
+              })
+            }
+          />
+          <button
+            id="submit-btn"
+            className="btn-submit"
+            onClick={() => {
+              if (state.num < 2) {
+                dispatch({
+                  type: "SET_ERROR",
+                  err: "Please enter a number greater than 2",
+                });
+                return;
+              }
+              const id = state.computedFibs.length;
+              dispatch({
+                type: "SET_FIBO",
+                id,
+                loading: true,
+                nth: ordinal_suffix(state.num),
+              });
+              runWorker(state.num, id);
+            }}
+          >
+            Calculate
+          </button>
+        </div>
+
+        <Results results={state.computedFibs} />
+      </div>
     </div>
   );
 }
-
 export default App;

@@ -1,3 +1,5 @@
+[Tutorial for help](https://www.smashingmagazine.com/2020/10/tasks-react-app-web-workers/)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
